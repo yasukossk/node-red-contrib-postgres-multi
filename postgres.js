@@ -114,13 +114,21 @@ module.exports = (RED) => {
         console.log(msg.payload);
       };
 
-      var pool = new Pool(connectionConfig);
+      var allConnectings = RED.settings.get('pgConnects') ? RED.settings.get('pgConnects') : false;
 
       node.on('input', async (msg) => {
         if (!Array.isArray(msg.payload)) {
           // Useful error message for transitioning from `postgres` to `postgres-multi`
           handleError(new Error('msg.payload must be an array of queries'));
           return;
+        }
+
+        if(allConnectings && msg.connectName){
+          var customConnect = msg.connectName;
+          var customConfig = allConnectings[customConnect];
+          var pool = new Pool(customConfig);
+        }else{
+          var pool = new Pool(connectionConfig);
         }
 
         try {
